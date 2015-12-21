@@ -1,4 +1,4 @@
-# Gnutty
+#:chestnut: Gnutty :chestnut:
 
 A Gnutella-like peer-to-peer system in Elixir.
 
