@@ -1,6 +1,10 @@
 defmodule HostCache do
   use GenServer
 
+  #######
+  # API #
+  #######
+
   def start_link do
     :random.seed(:os.timestamp)
     GenServer.start_link(__MODULE__, HashSet.new)
@@ -13,6 +17,10 @@ defmodule HostCache do
   def peers(pid) do
     GenServer.call(pid, :peers)
   end
+
+  #############
+  # Callbacks #
+  #############
 
   def handle_call({:hello, peer}, _from, peers) do
     if Enum.empty?(peers) do

@@ -1,5 +1,5 @@
 defmodule GnuttyTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
   doctest Gnutty
 
   test "an empty host cache replies with {:welcome, :no_peers} when it receives :hello" do
@@ -44,8 +44,8 @@ defmodule GnuttyTest do
 
     assert reply == {:welcome, servent_1}
   end
-  
-  test "a servent send a ping to it's peer on receiving a reply from the host cache" do
+
+  test "a servent adds to its peer list after ping-pong handshaking is done" do
     {:ok, host_cache} = HostCache.start_link
     {:ok, servent_1}  = Servent.start_link
     {:ok, servent_2}  = Servent.start_link
@@ -56,8 +56,17 @@ defmodule GnuttyTest do
     assert Servent.peers(servent_1) == [servent_2]
     assert Servent.peers(servent_2) == [servent_1]
   end
+  
+  test "a servent removes a peer if that peer becomes unavailable" do
+    {:ok, host_cache} = HostCache.start_link
+    {:ok, servent_1}  = Servent.start_link
+    {:ok, servent_2}  = Servent.start_link
 
-  # test "a servent sends a ping periodically to its known hosts" do 
-  # end
+    HostCache.hello(host_cache, servent_1)
+    HostCache.hello(host_cache, servent_2)
+    Servent.stop(servent_2)
+
+    assert Servent.peers(servent_1) == []
+  end
 
 end
