@@ -2,7 +2,9 @@ defmodule Servent do
   use GenServer
 
   defmodule State do
-    defstruct peers: HashSet.new
+    defstruct peers: HashSet.new, 
+           data_fun: nil, 
+           matcher_fun: &String.contains?/2 
   end
 
   #######
@@ -17,12 +19,16 @@ defmodule Servent do
     GenServer.call(pid, :peers)
   end
 
-  def ping(pid, peer) do
-    GenServer.cast(pid, {:ping, peer})
+  def search(pid, peer, search_query) do
+    send(pid, {:search, peer, search_query})
   end
 
   def stop(pid) do
     GenServer.call(pid, :stop)
+  end
+
+  def ping(pid, peer) do
+    GenServer.cast(pid, {:ping, peer})
   end
 
   #############
@@ -62,8 +68,38 @@ defmodule Servent do
     {:noreply, %{state | peers: HashSet.delete(state.peers, pid)}}
   end
 
+  def handle_info({:search, peer, search_query}, state) do
+    handle_query(peer, search_query, state)
+    {:noreply, state}
+  end
+
+  def handle_info({:query_hit, peer, result}, state) do
+    send(peer, {:query_hit, self, result})
+    {:noreply, state}
+  end
+
   #####################
   # Private Functions #
   #####################
+
+  defp handle_query(peer, search_query, state) do
+    %{peers: peers, data_fun: data_fun, matcher_fun: matcher_fun} = state
+    data   = data_fun.()
+    result = data |> Enum.filter(&(matcher_fun.(&1, search_query)))
+
+    if query_miss?(result) do
+      query_peers(peers, peer, search_query)
+    else
+      send(peer, {:query_hit, self, result})
+    end
+  end
+
+  defp query_peers(peers, self, search_query) do
+    peers |> Enum.each(&(search(&1, self, search_query)))
+  end
+
+  defp query_miss?(result) do
+    Enum.empty?(result)
+  end
 
 end
