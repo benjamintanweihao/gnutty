@@ -33,10 +33,6 @@ defmodule HostCache do
     end
   end
 
-  def handle_call({:hello, peer}, _from, peers) do
-    {:reply, {:welcome, :no_peers}, HashSet.put(peers, peer)}
-  end
-
   def handle_call(:peers, _from, peers) do
     {:reply, HashSet.to_list(peers), peers}
   end
