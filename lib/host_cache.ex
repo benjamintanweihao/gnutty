@@ -5,15 +5,18 @@ defmodule HostCache do
   # API #
   #######
 
+  @spec start_link :: {:ok, pid}
   def start_link do
-    :random.seed(:os.timestamp)
+    _ = :random.seed(:os.timestamp)
     GenServer.start_link(__MODULE__, HashSet.new)
   end
 
+  @spec hello(pid, pid) :: any
   def hello(pid, peer) do
     GenServer.call(pid, {:hello, peer})
   end
 
+  @spec peers(pid) :: any
   def peers(pid) do
     GenServer.call(pid, :peers)
   end
@@ -22,6 +25,7 @@ defmodule HostCache do
   # Callbacks #
   #############
 
+  @spec handle_call({:hello, pid}, any, %{}) :: {:reply, {:welcome, :no_peers | pid} , %{}} 
   def handle_call({:hello, peer}, _from, peers) do
     Process.monitor(peer)
     if Enum.empty?(peers) do
@@ -33,6 +37,7 @@ defmodule HostCache do
     end
   end
 
+  @spec handle_call(:peers, any, %{}) :: {:reply, pid , %{}} 
   def handle_call(:peers, _from, peers) do
     {:reply, HashSet.to_list(peers), peers}
   end
