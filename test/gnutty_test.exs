@@ -69,4 +69,16 @@ defmodule GnuttyTest do
     assert Servent.peers(servent_1) == []
   end
 
+  test "a host cache removes a peer if that peer becomes unavailable" do
+    {:ok, host_cache} = HostCache.start_link
+    {:ok, servent_1}  = Servent.start_link
+    {:ok, servent_2}  = Servent.start_link
+
+    HostCache.hello(host_cache, servent_1)
+    HostCache.hello(host_cache, servent_2)
+    Servent.stop(servent_2)
+
+    refute Enum.member? HostCache.peers(host_cache), servent_2
+  end
+
 end

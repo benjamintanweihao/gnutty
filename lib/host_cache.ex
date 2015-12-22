@@ -23,6 +23,7 @@ defmodule HostCache do
   #############
 
   def handle_call({:hello, peer}, _from, peers) do
+    Process.monitor(peer)
     if Enum.empty?(peers) do
       {:reply, {:welcome, :no_peers}, HashSet.put(peers, peer)}
     else
@@ -38,6 +39,10 @@ defmodule HostCache do
 
   def handle_call(:peers, _from, peers) do
     {:reply, HashSet.to_list(peers), peers}
+  end
+
+  def handle_info({:DOWN, _ref, :process, pid, _reason}, peers) do
+    {:noreply, HashSet.delete(peers, pid)}
   end
 
 end
