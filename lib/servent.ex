@@ -6,11 +6,13 @@ defmodule Servent do
     @type t :: %State{peers: %{}, data_fun: (() -> [char_list]), matcher_fun: ((char_list, char_list) -> boolean)}
   end
 
+  @type on_start :: {:ok, pid} | {:error, {:already_started, pid} | term}
+
   #######
   # API #
   #######
 
-  @spec start_link(State.t) :: {:ok, pid}
+  @spec start_link(State.t) :: on_start
   def start_link(state \\ %State{}) do
     GenServer.start_link(__MODULE__, state)
   end
